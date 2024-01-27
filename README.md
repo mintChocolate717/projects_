@@ -1,3 +1,3 @@
 # projects_
 
-For Freetail: I apologize for lack of orgnization in this repository. My github account has been weired lately and won't let me do certain commands.
+I apologize for the lack of organization in this repository. My GitHub account has been weird lately and won't let me do specific actions currently.
