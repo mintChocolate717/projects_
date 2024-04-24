@@ -5,7 +5,7 @@ FINAL VEHICLE CRASH DATA ANALYSIS PROJECT
 MADE BY: JIWOONG "ALEX" CHOI
 LAST EDITED: SUNDAY APRIL 21, 2024
 
-JESUS LOVES YOU. NO MATTER WHAT.
+JESUS LOVES YOU.
 """
 import matplotlib.pyplot as plt
 import numpy as np
@@ -46,61 +46,6 @@ def read_xl_data(xl_file: xl, worksheet: str, padding:int = 0):
     
     # 3: turn them into numpy vectors and return them
     return np.array(times, dtype = float), np.array(accelerations, dtype = float)
-
-
-# def plot_sensor_data(xl_file: xl, worksheet: str, rows: int = 2, cols: int = 8, linearize: bool = False):
-    """
-    Scatter plots a figure of all the sensors based on user's desired combination of row and column.
-    This also returns values of m(slope) and b(y-intercept)
-    """
-    # vectors to store slopes and intercepts of best fit lines for each sensor
-    slopes = np.zeros(rows * cols)
-    intercepts = np.zeros(rows * cols)
-    
-    # 0: create a desired figure
-    fig, axs = plt.subplots(rows, cols, figsize = (16, 6))
-    
-    # iterate through each subplot:
-    for row in range(rows):
-        for col in range(cols):
-            # set visual-related parameters
-            font_size = 9
-            font_family = 'Helvetica' 
-
-            # 1: figure out the sensor num
-            sensor_num = row * cols + col + 1
-            
-            # 2: get Force and ADC values for current sensor:
-            forces, ADCs = read_sensor_data(xl_file, worksheet, sensor_num, padding)
-            # 2.1: if linearization is desired, linearize it.
-            if linearize:
-                ADCs = linearize_data(ADCs, Resistance, scale_factor = 1000.0)
-                # get relevant values
-                m, b, R_sq = best_fit_line(forces, ADCs)
-                # store slope and y-intercept into corresponding vectors:
-                slopes[sensor_num - 1] = m
-                intercepts[sensor_num - 1] = b
-                # plot the line of best fit:
-                axs[row, col].plot(forces, m * forces + b, color = 'k', linestyle = '-')
-                # Add legend to the graph
-                axs[row, col].legend([f"slope = {m:.2f}\nintercept = {b:.2f}\n$R^2$ = {R_sq:.2f}"], loc = 'upper left', fontsize = font_size - 2)
-
-            
-            # 3: plot them
-            axs[row, col].scatter(forces, ADCs, s = 7)
-            
-            # 4: write the apt title
-            axs[row, col].set_title(f"Sensor {sensor_num}", fontsize = font_size, fontfamily = font_family)
-            
-            # 5: write horitzontal and vertical axes names:
-            axs[row, col].set_xlabel("Force (Newtons)", fontsize = font_size, fontfamily = font_family)
-            axs[row, col].set_ylabel("Cs", fontsize = font_size, fontfamily = font_family)
-            
-            # 6: Adjust x-axis and y-axis tick labels
-            axs[row, col].tick_params(axis = 'x', labelsize = font_size, labelfontfamily = font_family) 
-            axs[row, col].tick_params(axis = 'y', labelsize = font_size, labelfontfamily = font_family) 
-    
-    plt.tight_layout()
     
 def plot_data(x1, y1, x2, y2, title: str = 'Title', x_label: str = 'X Label', y_label: str = 'Y Label', legend1: str = 'Case 1', legend2: str = 'Case 2'):
     # pre-set visual related elements:
@@ -162,7 +107,6 @@ def numerical_integration(x: np.array, fx: np.array, initial_value: float = 0.0)
     # return the newly integrated data points:
     return areas, total_area
 
-
 def main():
     ######################## START: EXCEL DATA IMPORT ########################
     # NOTE: Your Excel file must have BOTH case 1 and case 2 data, in two separate sheets. 
@@ -178,9 +122,9 @@ def main():
     # collect time and acceleration values for CASE 2:
     times_2, accelerations_2 = read_xl_data(xl_file, worksheet = 'Case 2', padding = 1)
 
-    # use numerical integration to get velocity data:
-    velocities_1 = numerical_integration(times_1, accelerations_1, initial_value = v0_1)
-    velocities_2 = numerical_integration(times_2, accelerations_2, initial_value = v0_2)
+    # use numerical integration to get velocity data
+    velocities_1, _ = numerical_integration(times_1, accelerations_1, initial_value = v0_1)
+    velocities_2, _ = numerical_integration(times_2, accelerations_2, initial_value = v0_2)
 
     # and go ahead just calculate the forces as well:
     forces_1 = mass * accelerations_1
@@ -190,13 +134,13 @@ def main():
 
     ######################## START: KINEMATIC ANALYSIS ########################
     # TODO 1: the acceleration of the vehicle vs. time – plot both cases separately and then on the same set of axes
-    # plot_data(times_1, accelerations_1, times_2, accelerations_2, "ACCELERATION of the vehicle VS TIME", 'Time ($s$)', 'Acceleration ($m/s^2$)', 'Case 1', 'Case 2')
+    plot_data(times_1, accelerations_1, times_2, accelerations_2, "ACCELERATION of the vehicle VS TIME", 'Time ($s$)', 'Acceleration ($m/s^2$)', 'Case 1', 'Case 2')
 
     # TODO 2: the force exerted on the vehicle vs. time – plot both cases separately and then on the same set of axes
-    # plot_data(times_1, forces_1, times_2, forces_2, "FORCE Exerted on the vehicle VS TIME", 'Time ($s$)', 'Force ($Newtons$)', 'Case 1', 'Case 2')
+    plot_data(times_1, forces_1, times_2, forces_2, "FORCE Exerted on the vehicle VS TIME", 'Time ($s$)', 'Force ($Newtons$)', 'Case 1', 'Case 2')
 
     # TODO 3: the velocity of the vehicle vs. time for both case
-    # plot_data(times_1, velocities_1, times_2, velocities_2, "VELOCITY of the vehicle VS TIME", 'Time ($s$)', 'Velocity ($m/s$)', 'Case 1', 'Case 2')
+    plot_data(times_1, velocities_1, times_2, velocities_2, "VELOCITY of the vehicle VS TIME", 'Time ($s$)', 'Velocity ($m/s$)', 'Case 1', 'Case 2')
     ######################## END: KINEMATIC ANALYSIS ########################
     
 
@@ -213,20 +157,16 @@ def main():
     # TODO 3: Determine the total impulse imparted on the vehicle as a result of the collision for both cases 
             # – you should use the numerical integration algorithm discussed in class.
     # total impulse is the area under the curve of Force VS Time
-    impulse_1, area1 = numerical_integration(times_1, forces_1, forces_1[0]) # FIXME
-    impulse_2, area2 = numerical_integration(times_2, forces_2, forces_2[0]) # FIXME
+    _ , impulse_1 = numerical_integration(times_1, forces_1, forces_1[0]) # FIXME
+    _ , impulse_2 = numerical_integration(times_2, forces_2, forces_2[0]) # FIXME
 
-    impulse_1 = np.trapz(forces_1, times_1)
-    impulse_2 = np.trapz(forces_2, times_2)
-
-    print(f"\nTotal Impulse Case 1: {impulse_1}\nTotal Impulse Case 2: {impulse_2}\n")
-    print(f"\nDelta P Case 1: {pf_1 - p0_1}\nDelta P Case 2: {pf_2 - p0_2}\n")
-
-    print(area1, area2)
-
+    print('-' * 55)
+    print(f"Momentum before impact: CASE 1: {p0_1:.3f}, CASE 2: {p0_2:.3f}")
+    print(f"Momentum after  impact: CASE 1: {pf_1:.3f}, CASE 2: {pf_2:.3f}")
+    print(f"\nTotal Impulse Case 1: {impulse_1:.3f}\nTotal Impulse Case 2: {impulse_2:.3f}")
+    print('-' * 55)
     ######################## END: IMPULSE AND MOMENTUM ANALYSIS ########################
-
-
+    
     plt.show()
 
 if __name__ == "__main__":
